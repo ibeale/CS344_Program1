@@ -1,0 +1,207 @@
+#!/bin/bash
+
+dims() {
+    if [[ $2 ]]
+    then
+        echo "Too many arguments" 1>&2
+        return 1
+    fi
+    
+    if [[ $1 ]]
+    then
+        if [[ -r $1 && -a $1 ]]
+        then
+            rows=0
+            while read row
+            do
+                rows=$(( rows + 1))
+                cols=0
+                for num in $row
+                do
+                    cols=$(( cols + 1))
+                done
+            done <$1
+            echo $rows $cols
+        else
+            echo "Bad File" 1>&2
+            return 1
+        fi
+    else        
+        row=0
+        while read row
+        do
+            rows=$(( rows + 1))
+            cols=0
+            for num in $row
+            do
+                cols=$(( cols + 1))
+            done
+        done
+        echo $rows $cols
+    fi
+
+
+}
+
+
+transpose() {
+	if [[ $2 ]]
+    then
+        echo "Too many arguments" 1>&2
+        return 1
+    fi
+    if [[ $1 ]]
+    then
+        if [[ -r $1 && -a $1 ]]
+        then
+			temp="temp$$"
+			>$temp
+			cols=$(echo $( dims $1 ) | cut -d ' ' -f2  )
+			rows=$(echo $( dims $1 ) | cut -d ' ' -f1  )
+			for ((i = 1; i <= $cols; i++))
+			do
+				temp2="temp2_$$"
+				temp3="temp3_$$"
+				>$temp3
+				cat $1 | cut -f $i >$temp2
+				for ((j=1; j<$rows; j++))
+				do
+					head -$j $temp2 | tail -1 | tr -d '\n' >>$temp3
+					echo $'\t' | tr -d '\n' >>$temp3
+				done
+				head -$j $temp2 | tail -1 | tr -d '\n' >>$temp3
+				echo >> $temp3
+
+				cat $temp3
+
+		
+			done
+		
+			# cat $temp
+			rm -f $temp
+			rm -f $temp2
+			rm -f $temp3
+        else
+            echo "Bad File" 1>&2
+            return 1
+        fi
+    else        
+		temp="temp$$"
+		matfile="matfile$$"
+		cat >$matfile
+		>$temp
+		cols=$(echo $( dims $matfile ) | cut -d ' ' -f2  )
+		rows=$(echo $( dims $matfile ) | cut -d ' ' -f1  )
+		for ((i = 1; i <= $cols; i++))
+		do
+			temp2="temp2_$$"
+			temp3="temp3_$$"
+			>$temp3
+			cat $matfile | cut -f $i >$temp2
+			for ((j=1; j<$rows; j++))
+			do
+				head -$j $temp2 | tail -1 | tr -d '\n' >>$temp3
+				echo $'\t' | tr -d '\n' >>$temp3
+			done
+			head -$j $temp2 | tail -1 | tr -d '\n' >>$temp3
+			echo >> $temp3
+			cat $temp3
+	
+		done
+	
+		# cat $temp
+		rm -f $temp
+		rm -f $temp2
+		rm -f $temp3
+		rm -f $matfile
+    fi
+
+}
+
+
+mean() {
+	if [[ $2 ]]
+    then
+        echo "Too many arguments" 1>&2
+        return 1
+    fi
+	if [[ $1 ]]
+    then
+        if [[ -r $1 && -a $1 ]]
+        then
+			temp="temp$$"
+			rows=$(echo $( dims $1 ) | cut -d ' ' -f1  )
+			echo "$( transpose $1 )" >$temp
+			meanfile="mean$$"
+			while read col
+			do
+				sum=0
+				for num in $col
+				do
+					((sum+=num))
+				done
+				echo $(( (sum + (rows/2)*( (sum>0)*2-1 )) / rows )) >>$meanfile
+			done <$temp
+			transpose $meanfile
+		fi
+		rm -f $temp
+		rm -f $meanfile
+	else
+		temp="temp$$"
+		temp2='temp2$$'
+		cat >$temp2
+		rows=$(echo $( dims $temp2 ) | cut -d ' ' -f1  )
+		echo "$( transpose $temp2 )" >$temp
+		meanfile="mean$$"
+		while read col
+		do
+			sum=0
+			for num in $col
+			do
+				((sum+=num))
+			done
+			echo $(( (sum + (rows/2)*( (sum>0)*2-1 )) / rows )) >>$meanfile
+		done <$temp
+		transpose $meanfile
+		rm -f $temp
+		rm -f $meanfile
+		rm -f $temp2
+
+	fi
+}
+
+
+add(){
+	if [[ $3 ]]
+    then
+        echo "Too many arguments" 1>&2
+        return 1
+    fi
+	if [[ $1 && $2 ]]
+    then
+        if [[ -r $1 && -a $1 && -r $2 && -a $2 ]]
+        then
+			cols1=$(echo $( dims $1 ) | cut -d ' ' -f2  )
+			rows1=$(echo $( dims $1 ) | cut -d ' ' -f1  )
+			cols2=$(echo $( dims $2 ) | cut -d ' ' -f2  )
+			rows2=$(echo $( dims $2 ) | cut -d ' ' -f1  )
+			if [[ $cols1 != $cols2 || $rows1 != $rows2 ]]
+			then
+				echo "Matrices do not match" 1>&2
+				return 1
+			else
+				for ((i=1; i<$rows1; i++))
+				do
+					temp="temp$$"
+					head -$j $1 | tail -1 | tr -d '\n' >$temp
+					for ((j=1; j<$cols1; j++))
+					do
+						
+					done
+				done
+			fi
+		fi
+	fi
+}
+
+$1 "${@:2}"
