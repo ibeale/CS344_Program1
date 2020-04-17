@@ -190,17 +190,32 @@ add(){
 				echo "Matrices do not match" 1>&2
 				return 1
 			else
-				for ((i=1; i<$rows1; i++))
+				outfile="outfile$$"
+				>$outfile
+				for ((i=1; i<=$rows1; i++))
 				do
-					temp="temp$$"
-					head -$j $1 | tail -1 | tr -d '\n' >$temp
+					temp1="temp1$$"
+					temp2="temp2$$"
+					head -$i $1 | tail -1 | tr -d '\n' >$temp1
+					head -$i $2 | tail -1 | tr -d '\n' >$temp2
 					for ((j=1; j<$cols1; j++))
 					do
-						
+						num1=$( cat $temp1 | cut -f $j )
+						num2=$( cat $temp2 | cut -f $j )
+						echo $((num1 + num2)) | tr -d '\n' >>$outfile
+						echo $'\t' | tr -d '\n' >>$outfile
 					done
+					num1=$( cat $temp1 | cut -f $j )
+					num2=$( cat $temp2 | cut -f $j )
+					echo $((num1 + num2)) | tr -d '\n' >>$outfile
+					echo >>$outfile
 				done
+				cat $outfile
 			fi
 		fi
+		rm -f $temp1
+		rm -f $temp2
+		rm -f $outfile
 	fi
 }
 
